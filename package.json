@@ -1,0 +1,21 @@
+{
+    "name": "ws_task",
+    "version": "1.0.0",
+    "description": "Template for the WebSocket remote control task",
+    "main": "app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node ./src/app.js",
+        "start:dev": "nodemon ./src/app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Dmitrii Bronnikov",
+    "keywords": [],
+    "license": "MIT",
+    "devDependencies": {
+        "nodemon": "^2.0.16"
+    },
+    "dependencies": {
+        "ws": "^8.8.0"
+    }
+}
