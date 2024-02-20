@@ -5,7 +5,9 @@ type WebSocketMessage = {
 }
 
 enum WebSocketMessageType {
-    register = 'reg'
+    register = 'reg',
+    createRoom = 'create_room',
+    updateRoom = 'update_room',
 }
 
 type RegisterIncomingMessageContent = {
@@ -20,9 +22,21 @@ type RegisterOutgoingMessageContent = {
     errorText: string
 }
 
+type UpdateRoomsOutgoingMessageContent = {
+    roomId: string,
+    roomUsers: ContentRoomUser[]
+}
+
+type ContentRoomUser = {
+    name: string,
+    index: number
+}
+
 export { 
     WebSocketMessage, 
     WebSocketMessageType,
     RegisterIncomingMessageContent,
-    RegisterOutgoingMessageContent
+    RegisterOutgoingMessageContent,
+    UpdateRoomsOutgoingMessageContent,
+    ContentRoomUser
 }
