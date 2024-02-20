@@ -8,6 +8,8 @@ enum WebSocketMessageType {
     register = 'reg',
     createRoom = 'create_room',
     updateRoom = 'update_room',
+    addUserToRoom = 'add_user_to_room',
+    createGame = "create_game",
 }
 
 type RegisterIncomingMessageContent = {
@@ -27,6 +29,15 @@ type UpdateRoomsOutgoingMessageContent = {
     roomUsers: ContentRoomUser[]
 }
 
+type AddUserToRoomIncomingMessageContent = {
+    indexRoom: string
+}
+
+type CreateGameOutgoingMessageContent = {
+    idGame: string,
+    idPlayer: number
+}
+
 type ContentRoomUser = {
     name: string,
     index: number
@@ -38,5 +49,7 @@ export {
     RegisterIncomingMessageContent,
     RegisterOutgoingMessageContent,
     UpdateRoomsOutgoingMessageContent,
-    ContentRoomUser
+    AddUserToRoomIncomingMessageContent,
+    ContentRoomUser,
+    CreateGameOutgoingMessageContent
 }

@@ -23,7 +23,7 @@ export const handle = (content: RegisterIncomingMessageContent): RegisterOutgoin
         }
     } else {
         try {
-            let [index, user] = storage.add({ name: content.name, password: content.password });
+            let [index, user] = storage.addUser({ name: content.name, password: content.password });
             return {
                 index: index,
                 name: user.name,
