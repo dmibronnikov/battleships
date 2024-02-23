@@ -1,21 +1,29 @@
-import { Game } from '../model/Game.js';
+import { GameState } from '../model/gameState.js';
 import { Room } from '../model/room.js';
 import { User } from '../model/user.js';
+import { Game } from '../model/game.js';
 
 interface IStorage {
-    addUser(user: User): void
+    addUser(user: User): [number, User]
     getUser(name: string): [number, User] | null
     getUserAtIndex(index: number): User | null
     
     upsertRoom(room: Room): void
     getRooms(): Room[]
     getRoom(id: string): Room | null
+
+    addGame(game: Game): void
+    getGame(id: string): Game | undefined
+
+    getGameState(gameId: string): GameState | undefined
+    upsertGameState(gameState: GameState, gameId: string): void
 }
 
 class Storage implements IStorage {
     private users: User[] = [];
     private rooms: Room[] = [];
     private games: Game[] = [];
+    private gameStates = new Map<string, GameState>();
 
     addUser(user: User): [number, User] {
         const result = this.users.findIndex((value) => {
@@ -70,14 +78,22 @@ class Storage implements IStorage {
         return this.games.push(game);
     }
 
-    getGame(id: string) {
+    getGame(id: string): Game | undefined {
         return this.games.find(game => {
             return game.id === id;
         });
     }
+
+    getGameState(gameId: string): GameState | undefined {
+        return this.gameStates.get(gameId);
+    }
+
+    upsertGameState(gameState: GameState, gameId: string): void {
+        this.gameStates.set(gameId, gameState);
+    }
 }
 
-const storage = new Storage();
+const storage: IStorage = new Storage();
 
 export { IStorage, Storage, storage };
 

@@ -8,11 +8,10 @@ export const handle = (roomId: string): [number, CreateGameOutgoingMessageConten
     if (room === null) { return [] }
 
     if (room.users.length === 2) {
+        const gameId = randomUUID().toString();
         let result: [number, CreateGameOutgoingMessageContent][] = [];
         for (const user of room.users) {
-            const gameId = randomUUID().toString();
             storage.addGame({ id: gameId, room: room });
-
             result.push([user.index, { idGame: gameId, idPlayer: user.index }]);
         }
 

@@ -5,19 +5,22 @@ import {
     WebSocketMessageType,
     RegisterIncomingMessageContent,
     AddUserToRoomIncomingMessageContent,
+    AddShipsIncomingMessageContent,
+    StartGameOutgoingMessageContent,
 } from "../model/websocketMessages.js";
-import { handle as handleRegister } from "../routes/register.js";
-import { handle as handleUpdateRooms } from "../routes/updateRooms.js";
-import { handle as handleCreateRoom } from "../routes/createRoom.js";
-import { handle as handleAddUserToRoom } from "../routes/addUserToRoom.js";
-import { handle as handleCreateGame } from "../routes/createGame.js";
+import { handle as handleRegister } from "../handlers/register.js";
+import { handle as handleUpdateRooms } from "../handlers/updateRooms.js";
+import { handle as handleCreateRoom } from "../handlers/createRoom.js";
+import { handle as handleAddUserToRoom } from "../handlers/addUserToRoom.js";
+import { handle as handleCreateGame } from "../handlers/createGame.js";
+import { handle as handleAddShips } from "../handlers/addShips.js";
 
 let authorizedSessions = new Map<string, number>();
 let activeConnections = new Map<string, any>();
 
 export const run = () => {
     const wss = new WebSocketServer({ port: process.env.WEBSOCKET_PORT });
-
+    
     wss.on("connection", (ws, req) => {
         const sessionId = req.headers['sec-websocket-key'];
         if (sessionId === undefined) { throw new Error('No Session'); }
@@ -39,29 +42,29 @@ const listenToEvents = (connection: any, sessionId: string) => {
                 authorizedSessions.set(sessionId, registerResponse.index);
                 connection.send(composeMessage(WebSocketMessageType.register, JSON.stringify(registerResponse)));
                 
-                let updateRoomsResponse = handleUpdateRooms();
-                let updateRoomsMessage = composeMessage(WebSocketMessageType.updateRoom, JSON.stringify(updateRoomsResponse));
+                const updateRoomsResponse = handleUpdateRooms();
+                const updateRoomsMessage = composeMessage(WebSocketMessageType.updateRoom, JSON.stringify(updateRoomsResponse));
                 broadcast(updateRoomsMessage, Array.from(activeConnections.values()));
             } else if (message.type === WebSocketMessageType.createRoom) {
                 const userIndex = authorizedSessions.get(sessionId);
                 if (userIndex === undefined) { throw new Error('No user'); }
-
+                
                 handleCreateRoom(userIndex);
                 
-                let updateRoomsResponse = handleUpdateRooms();
+                const updateRoomsResponse = handleUpdateRooms();
                 let updateRoomsMessage = composeMessage(WebSocketMessageType.updateRoom, JSON.stringify(updateRoomsResponse));
                 broadcast(updateRoomsMessage, Array.from(activeConnections.values()));
             } else if (message.type === WebSocketMessageType.addUserToRoom) {
                 const userIndex = authorizedSessions.get(sessionId);
                 if (userIndex === undefined) { throw new Error('No user'); }
-
+                
                 const content: AddUserToRoomIncomingMessageContent = JSON.parse(message.data);
                 handleAddUserToRoom(content, userIndex);
-
-                let updateRoomsResponse = handleUpdateRooms();
-                let updateRoomsMessage = composeMessage(WebSocketMessageType.updateRoom, JSON.stringify(updateRoomsResponse));
+                
+                const updateRoomsResponse = handleUpdateRooms();
+                const updateRoomsMessage = composeMessage(WebSocketMessageType.updateRoom, JSON.stringify(updateRoomsResponse));
                 broadcast(updateRoomsMessage, Array.from(activeConnections.values()));
-
+                
                 const gameMessagesContent = handleCreateGame(content.indexRoom);
                 for (const [userId, messageContent] of gameMessagesContent) {
                     const ws = connectionForUserId(userId);
@@ -69,6 +72,18 @@ const listenToEvents = (connection: any, sessionId: string) => {
                         let message = composeMessage(WebSocketMessageType.createGame, JSON.stringify(messageContent));
                         ws.send(message);
                     }
+                }
+            } else if (message.type === WebSocketMessageType.addShips) {
+                const content: AddShipsIncomingMessageContent = JSON.parse(message.data);
+
+                const response = handleAddShips(content);
+
+                if (response === undefined) { return; }
+
+                for (const playerResponse of response) {
+                    const ws = connectionForUserId(playerResponse.currentPlayerIndex);
+                    const message = composeMessage(WebSocketMessageType.startGame, JSON.stringify(playerResponse));
+                    ws.send(message);
                 }
             }
         } catch (error) {
@@ -91,7 +106,7 @@ const connectionForUserId = (userId: number): any | null => {
             break;
         }
     }
-
+    
     if (sessionId !== null) {
         return activeConnections.get(sessionId);
     } else {
@@ -117,6 +132,12 @@ const parseIncomingMessage = (message: string): WebSocketMessage => {
         case WebSocketMessageType.addUserToRoom:
         return {
             type: WebSocketMessageType.addUserToRoom,
+            data: json["data"],
+            id: json["id"]
+        }
+        case WebSocketMessageType.addShips:
+        return {
+            type: WebSocketMessageType.addShips,
             data: json["data"],
             id: json["id"]
         }
