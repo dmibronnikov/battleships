@@ -12,6 +12,10 @@ enum WebSocketMessageType {
     createGame = 'create_game',
     addShips = 'add_ships',
     startGame = 'start_game',
+    attack = 'attack',
+    randomAttack = 'randomAttack',
+    turn = 'turn',
+    finish = 'finish'
 };
 
 type RegisterIncomingMessageContent = {
@@ -54,13 +58,39 @@ type AddShipsIncomingMessageContent = {
 type StartGameOutgoingMessageContent = {
     currentPlayerIndex: number,
     ships: ContentShip[]
-}
+};
+
+type TurnOutgoingMessageContent = {
+    currentPlayer: number
+};
+
+type AttackIncomingMessageContent = {
+    gameId: string,
+    x: number,
+    y: number,
+    indexPlayer: number
+};
+
+type AttackFeedbackOutgoingMessageContent = {
+    position: ContentPosition,
+    currentPlayer: number,
+    status: 'miss' | 'killed' | 'shot'
+};
+
+type RandomAttackIncomingMessageContent = {
+    gameId: string,
+    indexPlayer: number
+};
+
+type FinishOutgoingMessageContent = {
+    winPlayer: number
+};
 
 type ContentShip = {
     position: ContentPosition,
     direction: boolean,
     length: number,
-    type: "small" | "medium" | "large" | "huge"
+    type: 'small' | 'medium' | 'large' | 'huge'
 };
 
 type ContentPosition = {
@@ -79,6 +109,11 @@ export {
     CreateGameOutgoingMessageContent,
     AddShipsIncomingMessageContent,
     StartGameOutgoingMessageContent,
+    TurnOutgoingMessageContent,
+    AttackIncomingMessageContent,
+    AttackFeedbackOutgoingMessageContent,
+    RandomAttackIncomingMessageContent,
+    FinishOutgoingMessageContent,
     ContentShip,
     ContentPosition
 }

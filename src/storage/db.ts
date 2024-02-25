@@ -1,4 +1,4 @@
-import { GameState } from '../model/gameState.js';
+import { GameState } from '../model/gameField.js';
 import { Room } from '../model/room.js';
 import { User } from '../model/user.js';
 import { Game } from '../model/game.js';
