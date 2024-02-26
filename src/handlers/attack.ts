@@ -1,17 +1,23 @@
-import { AttackFeedbackOutgoingMessageContent, FinishOutgoingMessageContent } from "../model/websocketMessages.js";
+import { AttackFeedbackOutgoingMessageContent } from "../model/websocketMessages.js";
 import { Point } from "../types.js";
 
 export const handle = (
         playerId: number,
-        attackPosition: Point,
-        attackResult: 'miss' | 'shot' | 'killed'
-    ): AttackFeedbackOutgoingMessageContent => {
-        return {
-            position: {
-                x: attackPosition.x,
-                y: attackPosition.y
-            },
-            currentPlayer: playerId,
-            status: attackResult
+        attackResult: [Point, 'miss' | 'shot' | 'killed'][]
+    ): AttackFeedbackOutgoingMessageContent[] => {
+        let response: AttackFeedbackOutgoingMessageContent[] = [];
+        for (const attackPoint of attackResult) {
+            response.push(
+                {
+                    position: {
+                        x: attackPoint[0].x,
+                        y: attackPoint[0].y
+                    },
+                    currentPlayer: playerId,
+                    status: attackPoint[1]
+                }
+            )
         }
+
+        return response;
 };

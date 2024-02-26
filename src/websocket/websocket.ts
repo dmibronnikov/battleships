@@ -123,19 +123,20 @@ const listenToEvents = (connection: any, sessionId: string) => {
                         ws.send(message);
                     }
                 } else {
+                    const attackResponse = handleAttack(
+                        content.indexPlayer,
+                        attackResult
+                    );
+
                     const turnResponse = handleTurn(gameService.turn());
 
                     for (const playerId of playerIds) {
                         const ws = connectionForUserId(playerId);
 
-                        const response = handleAttack(
-                            content.indexPlayer, 
-                            { x: content.x, y: content.y }, 
-                            attackResult
-                        );
-
-                        const message = composeMessage(WebSocketMessageType.attack, JSON.stringify(response));
-                        ws.send(message);
+                        for (const response of attackResponse) {
+                            const message = composeMessage(WebSocketMessageType.attack, JSON.stringify(response));
+                            ws.send(message);
+                        }
 
                         const turnMessage = composeMessage(WebSocketMessageType.turn, JSON.stringify(turnResponse));
                         ws.send(turnMessage);
