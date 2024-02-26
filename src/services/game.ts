@@ -91,6 +91,9 @@ class GameService {
         storage.upsertGameState(gameState, this.gameId);
         
         if (gameField.shipsLeft <= 0) {
+            const currentPlayerWins = storage.getWins(currentPlayer.playerId)?.[1] ?? 0;
+            storage.upsertWin(currentPlayer.playerId, currentPlayerWins + 1);
+            
             return 'won';
         }
 

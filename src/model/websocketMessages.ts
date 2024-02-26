@@ -15,7 +15,8 @@ enum WebSocketMessageType {
     attack = 'attack',
     randomAttack = 'randomAttack',
     turn = 'turn',
-    finish = 'finish'
+    finish = 'finish',
+    updateWinners = 'update_winners'
 };
 
 type RegisterIncomingMessageContent = {
@@ -86,6 +87,11 @@ type FinishOutgoingMessageContent = {
     winPlayer: number
 };
 
+type ContentWinner = {
+    name: string,
+    wins: number
+};
+
 type ContentShip = {
     position: ContentPosition,
     direction: boolean,
@@ -115,5 +121,6 @@ export {
     RandomAttackIncomingMessageContent,
     FinishOutgoingMessageContent,
     ContentShip,
-    ContentPosition
+    ContentPosition,
+    ContentWinner
 }

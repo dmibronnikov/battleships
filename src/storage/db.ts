@@ -17,6 +17,10 @@ interface IStorage {
 
     getGameState(gameId: string): GameState | undefined
     upsertGameState(gameState: GameState, gameId: string): void
+
+    getWins(playerId: number): [User, number] | undefined
+    getWinners(): [User, number][]
+    upsertWin(playerId: number, wins: number): void;
 }
 
 class Storage implements IStorage {
@@ -24,6 +28,7 @@ class Storage implements IStorage {
     private rooms: Room[] = [];
     private games: Game[] = [];
     private gameStates = new Map<string, GameState>();
+    private wins = new Map<number, [User, number]>();
 
     addUser(user: User): [number, User] {
         const result = this.users.findIndex((value) => {
@@ -90,6 +95,21 @@ class Storage implements IStorage {
 
     upsertGameState(gameState: GameState, gameId: string): void {
         this.gameStates.set(gameId, gameState);
+    }
+
+    getWins(playerId: number): [User, number] | undefined {
+        return this.wins.get(playerId);
+    }
+
+    getWinners(): [User, number][] {
+        return Array.from(this.wins.values());
+    }
+
+    upsertWin(playerId: number, wins: number) {
+        const user = this.getUserAtIndex(playerId);
+        if (user === null) { throw new Error('User not found') }
+
+        this.wins.set(playerId, [user, wins]);
     }
 }
 

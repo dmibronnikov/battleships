@@ -18,6 +18,7 @@ import { handle as handleCreateGame } from "../handlers/createGame.js";
 import { handle as handleAddShips } from "../handlers/addShips.js";
 import { handle as handleAttack } from "../handlers/attack.js";
 import { handle as handleFinish } from "../handlers/finish.js";
+import { handle as handleUpdateWinners } from "../handlers/updateWinners.js";
 import { handleTurn } from "../handlers/game.js";
 import { GameService } from "../services/game.js";
 
@@ -122,6 +123,10 @@ const listenToEvents = (connection: any, sessionId: string) => {
                         
                         ws.send(message);
                     }
+
+                    const winnersResponse = handleUpdateWinners();
+                    const updateWinnersMessage = composeMessage(WebSocketMessageType.updateWinners, JSON.stringify(winnersResponse));
+                    broadcast(updateWinnersMessage, Array.from(activeConnections.values()));
                 } else {
                     const attackResponse = handleAttack(
                         content.indexPlayer,
