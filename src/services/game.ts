@@ -1,3 +1,5 @@
+import { Ship } from "../model/gameField.js";
+import { User } from "../model/user.js";
 import { storage } from "../storage/db.js"
 
 class GameService {
@@ -6,6 +8,14 @@ class GameService {
 
     constructor(gameId: string) {
         this.gameId = gameId;
+    }
+
+    playerIds(): number[] {
+        const game = storage.getGame(this.gameId);
+
+        if (game === undefined) { throw new Error('No game state'); }
+
+        return game.room.users.map(roomUser => { return roomUser.index });
     }
 
     turn(): number {
@@ -23,21 +33,66 @@ class GameService {
         }
     }
 
-    // attack(x: number, y: number, playerId: number): 'miss' | 'killed' | 'shot' {
-    //     let gameState = storage.getGameState(this.gameId);
+    attack(x: number, y: number, playerId: number): 'miss' | 'shot' | 'killed' | 'won' {
+        let gameState = storage.getGameState(this.gameId);
 
-    //     if (gameState === undefined) { throw new Error('No game state'); }
+        if (gameState === undefined) { throw new Error('No game state'); }
 
-    //     if (gameState.firstPlayer === undefined || gameState.secondPlayer === undefined) { 
-    //         throw new Error('Incorrect game state');
-    //     }
+        if (gameState.firstPlayer === undefined || gameState.secondPlayer === undefined) { 
+            throw new Error('Incorrect game state');
+        }
 
-    //     const turn: 'first'|'second' = gameState.firstPlayer.playerId === playerId ? 'first' : 'second';
+        const turn: 'first'|'second' = gameState.firstPlayer.playerId === playerId ? 'first' : 'second';
+        const currentPlayer = turn === 'first' ? gameState.firstPlayer : gameState.secondPlayer;
+        let gameField = turn === 'first' ? gameState.secondPlayer.field : gameState.firstPlayer.field;
 
-    //     let field = turn === 'first' ? gameState.secondPlayer.field.slice() : gameState.firstPlayer.field.slice();
+        let damagedShip: [Ship, number] | undefined
 
+        for (const ship of gameField.ships) {
+            const partIndex = ship.position.findIndex(point => {
+                return point.x === x && point.y === y;
+            });
 
-    // }
+            if (partIndex !== -1) {
+                damagedShip = [ship, partIndex];
+                break;
+            }
+        }
+
+        if (damagedShip === undefined) {
+            this.lastPlayerId = currentPlayer.playerId;
+            return 'miss';
+        }
+
+        let ship = damagedShip[0];
+        let damagedPart = damagedShip[1];
+
+        ship.status[damagedPart] = 1;
+        for (let i = 0; i < ship.position.length; i++) {
+            const point = ship.position[i];
+            gameField.field[point.y][point.x] = ship.status[i] === 1 ? 2 : 1;
+        }
+
+        const isKilled = ship.status.every(value => { return value === 1 });
+
+        if (isKilled) {
+            gameField.shipsLeft -= 1;
+        }
+
+        if (turn === 'first') {
+            gameState.secondPlayer.field = gameField;
+        } else {
+            gameState.firstPlayer.field = gameField;
+        }
+
+        storage.upsertGameState(gameState, this.gameId);
+        
+        if (gameField.shipsLeft <= 0) {
+            return 'won';
+        }
+
+        return isKilled ? 'killed' : 'shot';
+    }
 }
 
 export { GameService };

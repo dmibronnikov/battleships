@@ -16,6 +16,8 @@ import { handle as handleCreateRoom } from "../handlers/createRoom.js";
 import { handle as handleAddUserToRoom } from "../handlers/addUserToRoom.js";
 import { handle as handleCreateGame } from "../handlers/createGame.js";
 import { handle as handleAddShips } from "../handlers/addShips.js";
+import { handle as handleAttack } from "../handlers/attack.js";
+import { handle as handleFinish } from "../handlers/finish.js";
 import { handleTurn } from "../handlers/game.js";
 import { GameService } from "../services/game.js";
 
@@ -85,7 +87,11 @@ const listenToEvents = (connection: any, sessionId: string) => {
 
                 if (response === undefined) { return; }
 
-                let gameService = gameServices.get(content.gameId) ?? new GameService(content.gameId);
+                let gameService = gameServices.get(content.gameId)
+                if (gameService === undefined) {
+                    gameService = new GameService(content.gameId);
+                    gameServices.set(content.gameId, gameService);
+                }
 
                 const turnResponse = handleTurn(gameService.turn());
 
@@ -100,7 +106,41 @@ const listenToEvents = (connection: any, sessionId: string) => {
             } else if (message.type === WebSocketMessageType.attack) {
                 const content: AttackIncomingMessageContent = JSON.parse(message.data);
                 
-                
+                let gameService = gameServices.get(content.gameId);
+                if (gameService === undefined) { throw new Error('Game service for the game is not found'); };
+
+                const attackResult = gameService.attack(content.x, content.y, content.indexPlayer);
+
+                const playerIds = gameService.playerIds();
+
+                if (attackResult === 'won') {
+                    for (const playerId of playerIds) {
+                        const ws = connectionForUserId(playerId);
+
+                        const response = handleFinish(content.indexPlayer);
+                        const message = composeMessage(WebSocketMessageType.finish, JSON.stringify(response));
+                        
+                        ws.send(message);
+                    }
+                } else {
+                    const turnResponse = handleTurn(gameService.turn());
+
+                    for (const playerId of playerIds) {
+                        const ws = connectionForUserId(playerId);
+
+                        const response = handleAttack(
+                            content.indexPlayer, 
+                            { x: content.x, y: content.y }, 
+                            attackResult
+                        );
+
+                        const message = composeMessage(WebSocketMessageType.attack, JSON.stringify(response));
+                        ws.send(message);
+
+                        const turnMessage = composeMessage(WebSocketMessageType.turn, JSON.stringify(turnResponse));
+                        ws.send(turnMessage);
+                    }
+                }
             }
         } catch (error) {
             console.log(error);

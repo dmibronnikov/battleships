@@ -13,7 +13,8 @@ type PlayerState = {
 
 type GameField = {
     field: number[][]
-    ships: Ship[]
+    ships: Ship[],
+    shipsLeft: number
 };
 
 type Ship = {
@@ -43,7 +44,8 @@ const generate = (contentShips: ContentShip[]): GameField => {
 
     return {
         field: field,
-        ships: ships
+        ships: ships,
+        shipsLeft: ships.length
     }
 };
 
@@ -63,7 +65,7 @@ const shipFromContent = (contentShip: ContentShip): Ship => {
         head: contentShip.position,
         direction: contentShip.direction,
         position: position,
-        status: [0, 0, 0, 0],
+        status: new Array(contentShip.length).fill(0),
         type: contentShip.type
     }
 };

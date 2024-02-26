@@ -1,6 +1,6 @@
 import { AddShipsIncomingMessageContent, StartGameOutgoingMessageContent } from "../model/websocketMessages.js";
 import { storage } from "../storage/db.js";
-import { GameState, Ship, generate as generateGameField, contentFromShips } from "../model/gameField.js";
+import { GameState, generate as generateGameField, contentFromShips } from "../model/gameField.js";
 
 export const handle = (content: AddShipsIncomingMessageContent): StartGameOutgoingMessageContent[] | undefined => {
     const existingGameState = storage.getGameState(content.gameId);
