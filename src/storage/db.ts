@@ -1,7 +1,7 @@
 import { GameState } from '../model/gameField.js';
 import { Room } from '../model/room.js';
 import { User } from '../model/user.js';
-import { Game } from '../model/game.js';
+import { Game } from '../model/Game.js';
 
 interface IStorage {
     addUser(user: User): [number, User]
